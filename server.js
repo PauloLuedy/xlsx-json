@@ -1,7 +1,6 @@
 var express = require('express')
 var app = express()
 var xlsxtojson = require("xlsx-to-json");
-var xlstojson = require("xls-to-json");
 
 
 app.use(function(req, res, next) { //allow cross origin requests
