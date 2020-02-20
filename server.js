@@ -1,35 +1,55 @@
-var express = require('express')
-var app = express()
-var xlsxtojson = require("xlsx-to-json");
+var fs = require("fs");
+var express = require("express");
+var bodyParser = require('body-parser');
+var multer = require("multer");
+var upload = multer();
+var XLSX = require('xlsx');
+
+var app = express();
+
+// for parsing application/json
+app.use(bodyParser.json());
+
+// for parsing application/xwww-
+app.use(bodyParser.urlencoded({ extended: true }));
+//form-urlencoded
+
+// for parsing multipart/form-data
+//app.use(upload.array());
+
+//static folder
+app.use(express.static('public'));
 
 
-app.use(function(req, res, next) { //allow cross origin requests
-    res.setHeader("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Methods", "POST, PUT, OPTIONS, DELETE, GET");
-    res.header("Access-Control-Max-Age", "3600");
-    res.header("Access-Control-Allow-Headers", "Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
-    next();
+app.get('/', function(req, res) {
+    fs.readFile('index.html', 'utf8', function (err,data) {
+    if (err) {
+        return console.log(err);
+    }
+        //console.log(data);
+        res.write(data)
+    });
 });
 
-// configuration
-app.use(express.static(__dirname + '/public'));                
-app.use('/public/uploads',express.static(__dirname + '/public/uploads'));       
+app.post("/sendFile",  upload.single('fileName'), function(req, res){
 
-app.get('/', function (req, res) {
-  res.send('Hello World')
-})
+    //text fields
+    console.log(req.body);
 
-app.post('/api/xlstojson', function(req, res) {
-	xlsxtojson({
-		input: "./excel-to-json.xlsx",  // input xls 
-	    output: "output.json", // output json 
-	    lowerCaseHeaders:true
-	}, function(err, result) {
-	    if(err) {
-	      res.json(err);
-	    } else {
-	      res.json(result);
-	    }
-	});
+    //file contents
+    console.log(req.file);
+
+
+    // process
+    var response = req.file.originalname;
+
+    var workbook = XLSX.readFile(response);
+    var sheet_name_list = workbook.SheetNames;
+    console.log(XLSX.utils.sheet_to_json(workbook.Sheets[sheet_name_list[0]]))
+    res.json(response);
+
 });
-app.listen(3000)
+
+app.listen(3000, function () {
+  console.log('Example app listening on port 3000!')
+});
